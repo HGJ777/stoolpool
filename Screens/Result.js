@@ -1,121 +1,133 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function ResultScreen({ route }) {
+const getScore = (answers) => {
+    let score = 0;
+
+    const blackFlags = [
+        "Black", "Black tar-like", "Pus", "Worms/parasite",
+        "Fat globules", "Undigested food", "Very Foul", "Only with laxatives"
+    ];
+    const redFlags = [
+        "Red", "Dark/red streaks", "Bright red blood", "Burning",
+        "Pain after", "Pain before poop", "Random abdominal pain",
+        "More than 6x/day", "Sweet", "Chemical", "Rotten"
+    ];
+    const yellowFlags = [
+        "Sticky", "Oily", "Foamy", "Floated", "Yellow", "Yellow mucus",
+        "Only on toilet paper", "Mild cramp", "Only during strain"
+    ];
+
+    answers.forEach(ans => {
+        if (blackFlags.includes(ans)) score += 5;
+        else if (redFlags.includes(ans)) score += 3;
+        else if (yellowFlags.includes(ans)) score += 1;
+    });
+
+    return score;
+};
+
+const getResultDetails = (score) => {
+    if (score >= 18) return { color: 'black', message: '❗ Take immediate medical attention!' };
+    if (score >= 10) return { color: 'red', message: '⚠️ Go for a medical checkup.' };
+    if (score >= 5) return { color: 'yellow', message: '🟡 Watch your diet.' };
+    return { color: 'green', message: '✅ You’re in the clear!' };
+};
+
+export default function ResultScreen({ route, navigation }) {
     const { answers } = route.params;
-    const [result, setResult] = useState("");
+    const score = getScore(answers);
+    const { color, message } = getResultDetails(score);
 
     useEffect(() => {
-        const outcome = analyzeAnswers(answers);
-        setResult(outcome);
-    }, []);
-
-    const analyzeAnswers = (answers) => {
-        const tags = [];
-
-        // Match answers to diagnostic tags
-        const matchTag = (answer, map) => {
-            for (const key in map) {
-                if (key.toLowerCase() === answer.toLowerCase()) {
-                    tags.push(...map[key]);
-                }
+        const saveResult = async () => {
+            try {
+                const existing = await AsyncStorage.getItem('stool_results');
+                const parsed = existing ? JSON.parse(existing) : [];
+                const date = new Date().toLocaleString();
+                parsed.push({ date, result: message, color, score });
+                await AsyncStorage.setItem('stool_results', JSON.stringify(parsed));
+            } catch (err) {
+                console.error('❌ Error saving result:', err);
             }
         };
-
-        // Mapping system (basic rule engine)
-        matchTag(answers[0], {
-            "Black": ["Upper GI Bleed"],
-            "Red": ["Lower GI Bleed"],
-            "White/Clay": ["Bile Obstruction"],
-            "Green": ["Fast Transit Time"],
-            "Yellow": ["Fat Malabsorption"],
-        });
-
-        matchTag(answers[1], {
-            "Watery": ["Infection", "Diarrhea"],
-            "Hard": ["Constipation"],
-            "Sticky": ["Mucus presence"],
-            "Oily": ["Fat Malabsorption"],
-        });
-
-        matchTag(answers[2], {
-            "Very Foul": ["Infection"],
-            "Sweet": ["Clostridium"],
-            "Chemical": ["Medication Reaction"],
-        });
-
-        matchTag(answers[3], {
-            "4+ times/day": ["Diarrhea"],
-            "More than 6x/day": ["Severe Diarrhea"],
-            "Only with laxatives": ["Chronic Constipation"],
-            "Rarely": ["Irregular Bowel Movement"],
-        });
-
-        matchTag(answers[4], {
-            "Burning": ["IBD"],
-            "Sharp pain": ["IBS"],
-            "Pain before poop": ["IBS"],
-            "Only during strain": ["Constipation"],
-        });
-
-        matchTag(answers[5], {
-            "Bright red blood": ["Hemorrhoids", "Rectal Tear"],
-            "Black tar-like": ["Upper GI Bleed"],
-            "Mucus with blood": ["IBD"],
-        });
-
-        matchTag(answers[6], {
-            "Floated": ["Fat Malabsorption"],
-            "Stuck to bowl": ["Fat or Mucus"],
-        });
-
-        matchTag(answers[7], {
-            "Clear mucus": ["IBS"],
-            "Yellow mucus": ["Infection"],
-            "Worms/parasite": ["Parasitic Infection"],
-        });
-
-        // Count tags and find most frequent
-        const count = {};
-        for (const tag of tags) {
-            count[tag] = (count[tag] || 0) + 1;
-        }
-
-        const sorted = Object.entries(count).sort((a, b) => b[1] - a[1]);
-
-        if (sorted.length === 0) return "No notable issues detected based on the answers.";
-
-        // Top result + secondary possibilities
-        const top = sorted[0][0];
-        const others = sorted.slice(1, 3).map((item) => item[0]).join(", ");
-
-        return `🔍 Most likely issue: ${top}${others ? `\n📌 Also possible: ${others}` : ""}`;
-    };
+        saveResult();
+    }, []);
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
-            <Text style={styles.title}>Your Result 🧠</Text>
-            <Text style={styles.resultText}>{result}</Text>
-        </ScrollView>
+        <View style={styles.container}>
+            <Text style={styles.title}>Your StoolPool Result</Text>
+
+            <View style={[styles.resultBox, { borderColor: colorMap[color] }]}>
+                <Text style={styles.score}>Score: {score}</Text>
+                <Text style={[styles.resultMessage, { color: colorMap[color] }]}>{message}</Text>
+            </View>
+
+            <View style={styles.buttons}>
+                <TouchableOpacity style={styles.btn} onPress={() => navigation.navigate('Quiz')}>
+                    <Text style={styles.btnText}>🔁 Retake Quiz</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.btn} onPress={() => navigation.navigate('History')}>
+                    <Text style={styles.btnText}>📚 View History</Text>
+                </TouchableOpacity>
+            </View>
+        </View>
     );
 }
 
+const colorMap = {
+    black: '#000',
+    red: '#e53935',
+    yellow: '#fbc02d',
+    green: '#43a047',
+};
+
 const styles = StyleSheet.create({
     container: {
-        flexGrow: 1,
+        flex: 1,
+        backgroundColor: '#fff',
+        padding: 30,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 24,
-        backgroundColor: '#fff',
     },
     title: {
-        fontSize: 24,
+        fontSize: 26,
         fontWeight: 'bold',
         marginBottom: 20,
     },
-    resultText: {
-        fontSize: 16,
+    resultBox: {
+        borderWidth: 3,
+        padding: 25,
+        borderRadius: 12,
+        marginBottom: 30,
+        width: '100%',
+        alignItems: 'center',
+    },
+    score: {
+        fontSize: 20,
+        marginBottom: 10,
+        fontWeight: '600',
+    },
+    resultMessage: {
+        fontSize: 18,
+        fontWeight: 'bold',
         textAlign: 'center',
-        color: '#333',
+    },
+    buttons: {
+        width: '100%',
+        gap: 15,
+    },
+    btn: {
+        backgroundColor: '#2196f3',
+        padding: 15,
+        borderRadius: 10,
+        alignItems: 'center',
+    },
+    btnText: {
+        color: '#fff',
+        fontWeight: '600',
+        fontSize: 16,
     },
 });
