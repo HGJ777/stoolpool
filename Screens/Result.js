@@ -65,11 +65,11 @@ export default function ResultScreen({ route, navigation }) {
             </View>
 
             <View style={styles.buttons}>
-                <TouchableOpacity style={styles.btn} onPress={() => navigation.navigate('Quiz')}>
+                <TouchableOpacity style={styles.btn} onPress={() => navigation.navigate('Tabs', { screen: 'Quiz' })}>
                     <Text style={styles.btnText}>🔁 Retake Quiz</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.btn} onPress={() => navigation.navigate('History')}>
+                <TouchableOpacity style={styles.btn} onPress={() => navigation.navigate('Tabs', { screen: 'History' })}>
                     <Text style={styles.btnText}>📚 View History</Text>
                 </TouchableOpacity>
             </View>
