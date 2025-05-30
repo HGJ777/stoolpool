@@ -84,3 +84,7 @@ Worms/parasite
 Fat globules
 Undigested food
 Other
+
+//on the profile page filled with containers I should make them all touch opacity as such that once clicked
+it shows details of each container. for example, email clicking on it caused it to go to change email and
+for Average Score it shows what it means. I guess this would be similar to quiz where it is all located in one page and it changes as it goes

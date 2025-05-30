@@ -48,16 +48,16 @@ export default function SettingsScreen({ navigation }) {
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1, backgroundColor: '#fff', padding: 20, paddingTop: 100,
+        flex: 1, backgroundColor: '#fff', padding: 20, paddingTop: 60,
     },
     topBar: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: 20,
+        justifyContent: 'center',
+        marginBottom: 10,
     },
     title: {
-        fontSize: 20,
+        fontSize: 30,
         fontWeight: 'bold',
     },
     info: {
@@ -68,5 +68,11 @@ const styles = StyleSheet.create({
         top: 50, // or tweak this based on your status bar height
         left: 20,
         zIndex: 1,
+    },
+    settingItem:{
+        backgroundColor: '#f2f2f2',
+        borderRadius: 20,
+        marginBottom: 10,
+        padding: 20
     }
 });

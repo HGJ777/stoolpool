@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -19,11 +19,9 @@ export default function ProfileScreen({ navigation }) {
                 setEntryCount(parsed.length);
                 setLastResult(parsed[parsed.length - 1]);
 
-                // Average score
                 const scores = parsed.map(p => p.score);
                 setAvgScore((scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1));
 
-                // Most common type
                 const typeMap = {};
                 parsed.forEach(p => {
                     typeMap[p.result] = (typeMap[p.result] || 0) + 1;
@@ -31,13 +29,11 @@ export default function ProfileScreen({ navigation }) {
                 const mostCommon = Object.entries(typeMap).sort((a, b) => b[1] - a[1])[0];
                 setMostCommonType(mostCommon?.[0]);
 
-                // Entries this week
                 const now = new Date();
                 const weekStart = new Date(now.setDate(now.getDate() - 6));
                 const entriesWeek = parsed.filter(p => new Date(p.date) >= weekStart);
                 setEntriesThisWeek(entriesWeek.length);
 
-                // Streak
                 const dates = parsed.map(p => p.date.split('T')[0]);
                 const uniqueDays = [...new Set(dates)].reverse();
                 let s = 0;
@@ -57,8 +53,7 @@ export default function ProfileScreen({ navigation }) {
     }, []);
 
     return (
-        <View style={styles.container}>
-            {/* Settings Button */}
+        <ScrollView style={styles.container}>
             <View style={styles.Setting}>
                 <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
                     <Ionicons name="settings-outline" size={26} color="#333" />
@@ -66,15 +61,34 @@ export default function ProfileScreen({ navigation }) {
             </View>
 
             <View style={styles.topBar}>
-                <Text style={styles.title}>👤 Profile</Text>
+                <TouchableOpacity onPress={() => navigation.navigate('Info', { type: 'username' })}>
+                    <Text style={styles.title}>James123</Text>
+                </TouchableOpacity>
             </View>
 
-            <Text style={styles.info}>Nickname: <Text style={styles.value}>Anonymous Pooper</Text></Text>
-            <Text style={styles.info}>Total Entries: <Text style={styles.value}>{entryCount}</Text></Text>
-            <Text style={styles.info}>Entries This Week: <Text style={styles.value}>{entriesThisWeek}</Text></Text>
-            <Text style={styles.info}>Streak: <Text style={styles.value}>{streak} day{streak === 1 ? '' : 's'}</Text></Text>
-            <Text style={styles.info}>Average Score: <Text style={styles.value}>{avgScore}</Text></Text>
-            <Text style={styles.info}>Most Common Type: <Text style={styles.value}>{mostCommonType}</Text></Text>
+            <TouchableOpacity style={styles.infoBar} onPress={() => navigation.navigate('Info', { type: 'email' })}>
+                <Text style={styles.info}>Email: <Text style={styles.value}>James123@gmail.com</Text></Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.infoBar} onPress={() => navigation.navigate('Info', { type: 'totalEntries' })}>
+                <Text style={styles.info}>Total Entries: <Text style={styles.value}>{entryCount}</Text></Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.infoBar} onPress={() => navigation.navigate('Info', { type: 'entriesThisWeek' })}>
+                <Text style={styles.info}>Entries This Week: <Text style={styles.value}>{entriesThisWeek}</Text></Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.infoBar} onPress={() => navigation.navigate('Info', { type: 'streak' })}>
+                <Text style={styles.info}>Streak: <Text style={styles.value}>{streak} day{streak === 1 ? '' : 's'}</Text></Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.infoBar} onPress={() => navigation.navigate('Info', { type: 'avgScore' })}>
+                <Text style={styles.info}>Average Score: <Text style={styles.value}>{avgScore}</Text></Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.infoBar} onPress={() => navigation.navigate('Info', { type: 'mostCommonType' })}>
+                <Text style={styles.info}>Most Common Type: <Text style={styles.value}>{mostCommonType}</Text></Text>
+            </TouchableOpacity>
 
             {lastResult && (
                 <View style={styles.lastEntry}>
@@ -84,14 +98,9 @@ export default function ProfileScreen({ navigation }) {
                     <Text>Score: {lastResult.score}</Text>
                 </View>
             )}
-
-            <TouchableOpacity style={styles.button}>
-                <Text style={styles.buttonText}>Edit Profile (Coming Soon)</Text>
-            </TouchableOpacity>
-        </View>
+        </ScrollView>
     );
 }
-
 
 const styles = StyleSheet.create({
     container: {
@@ -99,10 +108,10 @@ const styles = StyleSheet.create({
     },
     topBar: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 20,
-        paddingTop: 60
+        marginBottom: 30,
+        paddingTop: 30
     },
     title: {
         fontSize: 26, fontWeight: 'bold',
@@ -114,7 +123,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     lastEntry: {
-        marginTop: 30,
         padding: 15,
         backgroundColor: '#f2f2f2',
         borderRadius: 10,
@@ -124,21 +132,15 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 8,
     },
-    button: {
-        marginTop: 30,
-        backgroundColor: '#2196f3',
-        padding: 15,
-        borderRadius: 10,
-        alignItems: 'center',
-    },
-    buttonText: {
-        color: '#fff',
-        fontWeight: 'bold',
-    },
-    Setting:{
+    Setting: {
         position: 'absolute',
-        top: 50, // or tweak this based on your status bar height
-        right: 20,
+        right: 0,
         zIndex: 1,
+    },
+    infoBar: {
+        backgroundColor: '#f2f2f2',
+        borderRadius: 20,
+        padding: 20,
+        marginBottom: 15,
     }
 });
