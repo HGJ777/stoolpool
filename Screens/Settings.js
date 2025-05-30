@@ -5,21 +5,43 @@ import { Ionicons } from '@expo/vector-icons';
 export default function SettingsScreen({ navigation }) {
     return (
         <View style={styles.container}>
-            {/* Custom top bar with back button and title */}
+            {/* 🔙 Back button */}
             <View style={styles.backTo}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
                     <Ionicons name="arrow-back-outline" size={26} color="#333" />
                 </TouchableOpacity>
             </View>
+
+            {/* 🧱 Header */}
             <View style={styles.topBar}>
-
                 <Text style={styles.title}>Settings</Text>
-
-                {/* Empty View to balance space (for centering title) */}
                 <View style={{ width: 26 }} />
             </View>
 
-            <Text style={styles.info}>⚙️ Settings coming soon!</Text>
+            {/* ⚙️ Settings Options */}
+            <TouchableOpacity style={styles.settingItem} onPress={() => { /* TODO: Hook to display name change */ }}>
+                <Text style={styles.settingText}>Edit Nickname</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.settingItem} onPress={() => { /* TODO: Hook to update email */ }}>
+                <Text style={styles.settingText}>Change Email</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.settingItem} onPress={() => { /* TODO: Hook to update password */ }}>
+                <Text style={styles.settingText}>Change Password</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.settingItem} onPress={() => { /* TODO: Hook to logout */ }}>
+                <Text style={[styles.settingText, { color: 'red' }]}>Log Out</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.settingItem} onPress={() => { /* TODO: Hook to delete account */ }}>
+                <Text style={[styles.settingText, { color: 'red' }]}>Delete Account</Text>
+            </TouchableOpacity>
+
+            <View style={styles.version}>
+                <Text style={{ color: 'gray' }}>App Version: 1.0.0</Text>
+            </View>
         </View>
     );
 }
