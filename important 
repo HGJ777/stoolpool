@@ -1,0 +1,86 @@
+git add .
+git commit -m "your message"
+git push
+
+npx expo start
+
+1. What color was your stool?
+
+Brown
+Black
+Red
+Yellow
+Green
+White/Clay
+Grey
+Other
+2. What was the consistency?
+
+Hard
+Lumpy
+Formed
+Soft
+Mushy
+Watery
+Sticky
+Oily
+3. Did it have a strong or unusual odor?
+
+Normal
+Mild
+Strong
+Very Foul
+Sweet
+Chemical
+Rotten
+Fishy
+4. How often are your bowel movements?
+
+1x/day
+2-3x/day
+4+ times/day
+Every other day
+Few times a week
+Rarely
+More than 6x/day
+Only with laxatives
+5. Was there any pain or cramping?
+
+No pain
+Mild cramp
+Sharp pain
+Burning
+Pain before poop
+Pain after
+Random abdominal pain
+Only during strain
+6. Did you see any blood?
+
+No
+Bright red blood
+Dark/red streaks
+Black tar-like
+Mucus with blood
+Tiny spots
+Only on toilet paper
+Not sure
+7. Did it float or sink?
+
+Floated
+Sank fast
+Sank slowly
+Stuck to bowl
+Foamy
+Layered
+Mixed
+Didn't notice
+8. Was there mucus, pus, or anything unusual?
+
+Clear mucus
+Yellow mucus
+No mucus
+Pus
+Worms/parasite
+Fat globules
+Undigested food
+Other
