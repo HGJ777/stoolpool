@@ -1,6 +1,17 @@
 git add .
-git commit -m "your message"
+git commit -m "before testing sliders"
 git push
+
+git checkout -b sliders-ui
+
+# 👉 test sliders in this branch...
+
+git add .
+git commit -m "sliders UI working"
+git push
+
+git checkout main
+git merge sliders-ui
 
 npx expo start
 
@@ -88,3 +99,4 @@ Other
 //on the profile page filled with containers I should make them all touch opacity as such that once clicked
 it shows details of each container. for example, email clicking on it caused it to go to change email and
 for Average Score it shows what it means. I guess this would be similar to quiz where it is all located in one page and it changes as it goes
+

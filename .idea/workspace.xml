@@ -5,11 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d9e69287-a531-441a-acbe-2096f730d4c7" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Screens/Info.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ProfileStack.js" beforeDir="false" afterPath="$PROJECT_DIR$/ProfileStack.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Screens/Info.js" beforeDir="false" afterPath="$PROJECT_DIR$/Screens/Info.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Screens/Profile.js" beforeDir="false" afterPath="$PROJECT_DIR$/Screens/Profile.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Screens/Settings.js" beforeDir="false" afterPath="$PROJECT_DIR$/Screens/Settings.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Screens/Settings.js" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/important " beforeDir="false" afterPath="$PROJECT_DIR$/important " afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -70,7 +70,7 @@
       <option name="presentableId" value="Default" />
       <updated>1748561904067</updated>
       <workItem from="1748561905094" duration="1622000" />
-      <workItem from="1748563843773" duration="17748000" />
+      <workItem from="1748563843773" duration="22900000" />
     </task>
     <servers />
   </component>

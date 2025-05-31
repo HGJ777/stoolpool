@@ -1,51 +1,79 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function InfoScreen({ route, navigation }) {
     const { type } = route.params;
+    const [nickname, setNickname] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
 
-    let title = '';
-    let description = '';
+    const handleNicknameUpdate = () => {
+        // Firebase logic here
+        Alert.alert('Updated', 'Nickname has been updated (TODO: Firebase)');
+    };
 
-    switch (type) {
-        case 'email':
-            title = 'Email';
-            description = 'This is the email tied to your account.';
-            break;
-        case 'username':
-            title = 'Username';
-            description = 'This is your display name, visible only to you.';
-            break;
-        case 'totalEntries':
-            title = 'Total Entries';
-            description = 'The total number of stool logs you’ve recorded.';
-            break;
-        case 'entriesThisWeek':
-            title = 'Entries This Week';
-            description = 'Number of logs recorded in the past 7 days.';
-            break;
-        case 'streak':
-            title = 'Streak';
-            description = 'How many days in a row you’ve logged entries.';
-            break;
-        case 'avgScore':
-            title = 'Average Score';
-            description = 'Average health score of your logs over time.';
-            break;
-        case 'mostCommonType':
-            title = 'Most Common Type';
-            description = 'The stool type (e.g., color or consistency) you log most often.';
-            break;
-        case 'lastEntry':
-            title = 'Last Entry';
-            description = 'Details of your most recent log entry.';
-            break;
-        default:
-            title = 'Unknown';
-            description = 'No information available for this item.';
-            break;
-    }
+    const handlePasswordChange = () => {
+        // Firebase logic here
+        Alert.alert('Updated', 'Password has been updated (TODO: Firebase)');
+    };
+
+    const handleLogout = () => {
+        // Firebase signOut() logic here
+        Alert.alert('Logged Out', 'You have been logged out (TODO: Firebase)');
+    };
+
+    const handleDelete = () => {
+        // Firebase delete user logic here
+        Alert.alert('Account Deleted', 'Account has been deleted (TODO: Firebase)');
+    };
+
+    const renderAccount = () => (
+        <View>
+            <Text style={styles.label}>Edit Nickname</Text>
+            <TextInput
+                style={styles.input}
+                value={nickname}
+                onChangeText={setNickname}
+                placeholder="Enter new nickname"
+            />
+            <TouchableOpacity style={styles.saveBtn} onPress={handleNicknameUpdate}>
+                <Text style={styles.saveText}>Save Nickname</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.label}>Change Password</Text>
+            <TextInput
+                style={styles.input}
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Enter new password"
+                secureTextEntry
+            />
+            <TouchableOpacity style={styles.saveBtn} onPress={handlePasswordChange}>
+                <Text style={styles.saveText}>Change Password</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.dangerBtn} onPress={handleLogout}>
+                <Text style={styles.dangerText}>Log Out</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.dangerBtn} onPress={handleDelete}>
+                <Text style={styles.dangerText}>Delete Account</Text>
+            </TouchableOpacity>
+        </View>
+    );
+
+    const getContent = () => {
+        switch (type) {
+            case 'account': return renderAccount();
+            case 'notifications': return <Text style={styles.description}>Notification settings will be available soon.</Text>;
+            case 'privacy': return <Text style={styles.description}>Your data is stored locally. Firebase cloud sync coming soon.</Text>;
+            case 'help': return <Text style={styles.description}>Need help? FAQ and contact support coming soon.</Text>;
+            case 'terms': return <Text style={styles.description}>Read our full terms of service in the next version update.</Text>;
+            case 'about': return <Text style={styles.description}>StoolPool helps track gut health privately and easily.</Text>;
+            default: return <Text style={styles.description}>No information available for this item.</Text>;
+        }
+    };
 
     return (
         <View style={styles.container}>
@@ -53,15 +81,18 @@ export default function InfoScreen({ route, navigation }) {
                 <Ionicons name="arrow-back-outline" size={26} color="#333" />
             </TouchableOpacity>
 
-            <Text style={styles.title}>{title}</Text>
-            <Text style={styles.description}>{description}</Text>
+            <Text style={styles.title}>{type.charAt(0).toUpperCase() + type.slice(1)}</Text>
+            {getContent()}
         </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1, backgroundColor: '#fff', padding: 20, paddingTop: 100,
+        flex: 1,
+        backgroundColor: '#fff',
+        padding: 20,
+        paddingTop: 100,
     },
     backButton: {
         position: 'absolute',
@@ -72,10 +103,45 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 26,
         fontWeight: 'bold',
-        marginBottom: 15,
+        marginBottom: 20,
     },
     description: {
         fontSize: 16,
         color: '#555',
+        lineHeight: 22,
+    },
+    label: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginTop: 20,
+    },
+    input: {
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 8,
+        padding: 10,
+        marginTop: 10,
+    },
+    saveBtn: {
+        backgroundColor: '#2196f3',
+        padding: 12,
+        borderRadius: 8,
+        marginTop: 10,
+    },
+    saveText: {
+        color: 'white',
+        fontWeight: 'bold',
+        textAlign: 'center',
+    },
+    dangerBtn: {
+        backgroundColor: '#ffdddd',
+        padding: 12,
+        borderRadius: 8,
+        marginTop: 15,
+    },
+    dangerText: {
+        color: 'red',
+        fontWeight: 'bold',
+        textAlign: 'center',
     },
 });
