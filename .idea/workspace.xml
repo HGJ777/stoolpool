@@ -5,12 +5,24 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d9e69287-a531-441a-acbe-2096f730d4c7" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/assets/Rectangle 1.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/balls.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/blobs.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/fluffy.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/hard.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/lumpy.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/normal.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/pencil.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/watery.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ProfileStack.js" beforeDir="false" afterPath="$PROJECT_DIR$/ProfileStack.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Screens/History.js" beforeDir="false" afterPath="$PROJECT_DIR$/Screens/History.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Screens/Homepage.js" beforeDir="false" afterPath="$PROJECT_DIR$/Screens/Homepage.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Screens/Info.js" beforeDir="false" afterPath="$PROJECT_DIR$/Screens/Info.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Screens/Profile.js" beforeDir="false" afterPath="$PROJECT_DIR$/Screens/Profile.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Screens/Settings.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/important " beforeDir="false" afterPath="$PROJECT_DIR$/important " afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Screens/Quiz.js" beforeDir="false" afterPath="$PROJECT_DIR$/Screens/Quiz.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Screens/Result.js" beforeDir="false" afterPath="$PROJECT_DIR$/Screens/Result.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -42,7 +54,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "main",
+    "git-widget-placeholder": "sliders-ui",
     "junie.onboarding.icon.badge.shown": "true",
     "last_opened_file_path": "/Users/eohjin/WebstormProjects/stoolpool",
     "node.js.detected.package.eslint": "true",
@@ -55,6 +67,11 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/assets" />
+    </key>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -70,7 +87,7 @@
       <option name="presentableId" value="Default" />
       <updated>1748561904067</updated>
       <workItem from="1748561905094" duration="1622000" />
-      <workItem from="1748563843773" duration="22900000" />
+      <workItem from="1748563843773" duration="61937000" />
     </task>
     <servers />
   </component>
