@@ -116,7 +116,6 @@ export default function InfoScreen({ route, navigation }) {
                     text: 'Logout',
                     style: 'destructive',
                     onPress: () => {
-                        // Reset app state and navigate to login
                         Alert.alert('Logged Out', 'You have been logged out successfully');
                     }
                 }
@@ -136,7 +135,7 @@ export default function InfoScreen({ route, navigation }) {
                     onPress: () => {
                         Alert.alert(
                             'Final Confirmation',
-                            'Type "DELETE" to confirm account deletion',
+                            'Are you absolutely sure? This will delete all your health data.',
                             [
                                 { text: 'Cancel', style: 'cancel' },
                                 {
@@ -198,6 +197,33 @@ export default function InfoScreen({ route, navigation }) {
         Linking.openURL(url).catch(() => {
             Alert.alert('Error', 'Unable to open link');
         });
+    };
+
+    const getStorageStats = async () => {
+        try {
+            const data = await AsyncStorage.getItem('stool_results');
+            const profile = await AsyncStorage.getItem('user_profile');
+            const notifications = await AsyncStorage.getItem('notification_settings');
+            const privacy = await AsyncStorage.getItem('privacy_settings');
+
+            let totalSize = 0;
+            let totalEntries = 0;
+
+            if (data) {
+                totalSize += new Blob([data]).size;
+                totalEntries = JSON.parse(data).length;
+            }
+            if (profile) totalSize += new Blob([profile]).size;
+            if (notifications) totalSize += new Blob([notifications]).size;
+            if (privacy) totalSize += new Blob([privacy]).size;
+
+            return {
+                size: (totalSize / 1024).toFixed(1) + ' KB',
+                entries: totalEntries
+            };
+        } catch (error) {
+            return { size: '0 KB', entries: 0 };
+        }
     };
 
     const renderAccount = () => (
@@ -380,55 +406,63 @@ export default function InfoScreen({ route, navigation }) {
         </ScrollView>
     );
 
-    const renderData = () => (
-        <ScrollView style={styles.content}>
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Data Management</Text>
+    const renderData = () => {
+        const [storageStats, setStorageStats] = useState({ size: '0 KB', entries: 0 });
 
-                <TouchableOpacity style={styles.actionBtn} onPress={exportData}>
-                    <Ionicons name="download-outline" size={20} color="#2196F3" />
-                    <View style={styles.actionContent}>
-                        <Text style={styles.actionTitle}>Export Your Data</Text>
-                        <Text style={styles.actionDescription}>Download all your health data as CSV</Text>
+        useEffect(() => {
+            getStorageStats().then(setStorageStats);
+        }, []);
+
+        return (
+            <ScrollView style={styles.content}>
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Data Management</Text>
+
+                    <TouchableOpacity style={styles.actionBtn} onPress={exportData}>
+                        <Ionicons name="download-outline" size={20} color="#2196F3" />
+                        <View style={styles.actionContent}>
+                            <Text style={styles.actionTitle}>Export Your Data</Text>
+                            <Text style={styles.actionDescription}>Download all your health data as CSV</Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={20} color="#999" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.actionBtn}>
+                        <Ionicons name="refresh-outline" size={20} color="#FF9800" />
+                        <View style={styles.actionContent}>
+                            <Text style={styles.actionTitle}>Restore from Backup</Text>
+                            <Text style={styles.actionDescription}>Restore previously backed up data</Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={20} color="#999" />
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Storage Information</Text>
+
+                    <View style={styles.storageInfo}>
+                        <Text style={styles.storageLabel}>Local Storage Used</Text>
+                        <Text style={styles.storageValue}>{storageStats.size}</Text>
                     </View>
-                    <Ionicons name="chevron-forward" size={20} color="#999" />
-                </TouchableOpacity>
 
-                <TouchableOpacity style={styles.actionBtn}>
-                    <Ionicons name="refresh-outline" size={20} color="#FF9800" />
-                    <View style={styles.actionContent}>
-                        <Text style={styles.actionTitle}>Restore from Backup</Text>
-                        <Text style={styles.actionDescription}>Restore previously backed up data</Text>
+                    <View style={styles.storageInfo}>
+                        <Text style={styles.storageLabel}>Total Entries</Text>
+                        <Text style={styles.storageValue}>{storageStats.entries} records</Text>
                     </View>
-                    <Ionicons name="chevron-forward" size={20} color="#999" />
+
+                    <View style={styles.storageInfo}>
+                        <Text style={styles.storageLabel}>Last Backup</Text>
+                        <Text style={styles.storageValue}>Not available</Text>
+                    </View>
+                </View>
+
+                <TouchableOpacity style={[styles.dangerBtn, { marginTop: 20 }]} onPress={clearAllData}>
+                    <Ionicons name="trash-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+                    <Text style={styles.dangerText}>Clear All Data</Text>
                 </TouchableOpacity>
-            </View>
-
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Storage Information</Text>
-
-                <View style={styles.storageInfo}>
-                    <Text style={styles.storageLabel}>Local Storage Used</Text>
-                    <Text style={styles.storageValue}>2.4 MB</Text>
-                </View>
-
-                <View style={styles.storageInfo}>
-                    <Text style={styles.storageLabel}>Total Entries</Text>
-                    <Text style={styles.storageValue}>24 records</Text>
-                </View>
-
-                <View style={styles.storageInfo}>
-                    <Text style={styles.storageLabel}>Last Backup</Text>
-                    <Text style={styles.storageValue}>2 days ago</Text>
-                </View>
-            </View>
-
-            <TouchableOpacity style={[styles.dangerBtn, { marginTop: 20 }]} onPress={clearAllData}>
-                <Ionicons name="trash-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
-                <Text style={styles.dangerText}>Clear All Data</Text>
-            </TouchableOpacity>
-        </ScrollView>
-    );
+            </ScrollView>
+        );
+    };
 
     const renderHelp = () => (
         <ScrollView style={styles.content}>
@@ -556,14 +590,6 @@ export default function InfoScreen({ route, navigation }) {
             </View>
 
             <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Acknowledgments</Text>
-                <Text style={styles.description}>
-                    Special thanks to the medical community for establishing the Bristol Stool Chart
-                    and other standardized health assessment tools that make this app possible.
-                </Text>
-            </View>
-
-            <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Connect With Us</Text>
 
                 <TouchableOpacity
@@ -635,34 +661,6 @@ export default function InfoScreen({ route, navigation }) {
                 <Text style={styles.termsText}>
                     The developers shall not be liable for any damages arising from the use or inability to use
                     this application, including but not limited to health decisions made based on app data.
-                </Text>
-
-                <Text style={styles.termsSection}>7. Updates and Changes</Text>
-                <Text style={styles.termsText}>
-                    We reserve the right to update these terms at any time. Continued use of the app constitutes
-                    acceptance of any changes.
-                </Text>
-            </View>
-
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Privacy Policy</Text>
-
-                <Text style={styles.termsSection}>Data Collection</Text>
-                <Text style={styles.termsText}>
-                    We collect only the health tracking data you voluntarily input. No data is transmitted
-                    to external servers without your explicit consent.
-                </Text>
-
-                <Text style={styles.termsSection}>Data Storage</Text>
-                <Text style={styles.termsText}>
-                    All data is stored locally on your device using encrypted storage. You maintain full
-                    control over your data at all times.
-                </Text>
-
-                <Text style={styles.termsSection}>Data Sharing</Text>
-                <Text style={styles.termsText}>
-                    We never share your personal health information with third parties. Any data export
-                    is initiated by you and under your control.
                 </Text>
             </View>
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, TextInput} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image, TextInput, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import Slider from '@react-native-community/slider';
 
 export default function QuizScreen({ navigation }) {
@@ -12,8 +12,7 @@ export default function QuizScreen({ navigation }) {
     const [floatType, setFloatType] = useState("Float");
     const [floatDetails, setFloatDetails] = useState([]);
     const [started, setStarted] = useState(false);
-
-    const [textInputValue, setTextInputValue] = useState(''); // Fixed: Added dedicated state for text input
+    const [textInputValue, setTextInputValue] = useState('');
 
     const colorLabels = ["White", "Yellow", "Green", "Brown", "Red", "Black"];
     const floatOptions = {
@@ -50,7 +49,6 @@ export default function QuizScreen({ navigation }) {
     const handleNext = (answer) => {
         let updatedAnswers = [...answers];
 
-        // Inject structured answers based on question index
         switch (currentIndex) {
             case 0: // color
             case 1: // consistency
@@ -59,11 +57,11 @@ export default function QuizScreen({ navigation }) {
                 updatedAnswers.push(answer);
                 break;
 
-            case 3: // pain object - FIXED: Don't push answer parameter
+            case 3: // pain object
                 updatedAnswers.push({ ...painValues });
                 break;
 
-            case 4: // float + floatDetails - FIXED: Don't push answer parameter
+            case 4: // float + floatDetails
                 updatedAnswers.push(`${floatType}: ${floatDetails.join(', ')}`);
                 break;
 
@@ -80,7 +78,6 @@ export default function QuizScreen({ navigation }) {
         setFloatDetails([]);
         setTextInputValue('');
 
-        // Move forward or finish
         if (currentIndex + 1 < questions.length) {
             setCurrentIndex(currentIndex + 1);
         } else {
@@ -89,7 +86,6 @@ export default function QuizScreen({ navigation }) {
     };
 
     const handleSkip = () => {
-        // Move forward or finish
         if (currentIndex + 1 < questions.length) {
             setCurrentIndex(currentIndex + 1);
         } else {
@@ -99,7 +95,6 @@ export default function QuizScreen({ navigation }) {
 
     const handleBack = () => {
         if (currentIndex === 0) {
-            // If on first question, go back to start screen and reset everything
             setStarted(false);
             setCurrentIndex(0);
             setAnswers([]);
@@ -109,23 +104,20 @@ export default function QuizScreen({ navigation }) {
             setSmellValue(0);
             setFloatType("Float");
             setFloatDetails([]);
-            setTextInputValue(''); // Fixed: Reset text input value
+            setTextInputValue('');
         } else {
-            // Go back to previous question and remove last answer
             const updatedAnswers = [...answers];
             updatedAnswers.pop();
             setAnswers(updatedAnswers);
 
             setCurrentIndex(currentIndex - 1);
-
-            // Reset current question state
             setSliderValue(0);
             setPainValues({ before: 0, during: 0, after: 0 });
             setPainStep('before');
             setSmellValue(0);
             setFloatType("Float");
             setFloatDetails([]);
-            setTextInputValue(''); // Fixed: Reset text input value
+            setTextInputValue('');
         }
     };
 
@@ -142,260 +134,272 @@ export default function QuizScreen({ navigation }) {
     const selectedColor = mapSliderToColor(sliderValue);
 
     return (
-        <View style={styles.container}>
-            {!started ? (
-                <View style={styles.startScreen}>
-                    <Text style={styles.startTitle}>Ready to start the quiz?</Text>
-                    <TouchableOpacity
-                        style={styles.startButton}
-                        onPress={() => setStarted(true)}
-                    >
-                        <Text style={styles.startButtonText}>Start Quiz</Text>
-                    </TouchableOpacity>
-                </View>
-            ) : (
-                <>
-                    {/* Back Button */}
-                    <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-                        <Text style={styles.backButtonText}>← Back</Text>
-                    </TouchableOpacity>
-
-                    <Text style={currentIndex === 1 ? styles.question2 : styles.question}>
-                        {currentQuestion.question}
-                    </Text>
-
-                    {currentQuestion.type === "slider" && (
-                        <View style={styles.section}>
-                            <Image source={require('../assets/Rectangle 1.png')} style={styles.gradientBar} />
-                            <Slider
-                                style={styles.slider}
-                                minimumValue={0}
-                                maximumValue={maxSliderValue}
-                                step={1}
-                                value={sliderValue}
-                                onValueChange={setSliderValue}
-                                minimumTrackTintColor="transparent"
-                                maximumTrackTintColor="transparent"
-                                thumbTintColor="#000"
-                            />
-                            <TouchableOpacity style={styles.nextButton} onPress={() => handleNext(selectedColor)}>
-                                <Text style={styles.nextButtonText}>Next</Text>
+        <KeyboardAvoidingView
+            style={styles.container}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <View style={styles.container}>
+                    {!started ? (
+                        <View style={styles.startScreen}>
+                            <Text style={styles.startTitle}>Ready to start the quiz?</Text>
+                            <TouchableOpacity
+                                style={styles.startButton}
+                                onPress={() => setStarted(true)}
+                            >
+                                <Text style={styles.startButtonText}>Start Quiz</Text>
                             </TouchableOpacity>
                         </View>
-                    )}
-
-                {currentQuestion.type === "smell" && (
-                    <View style={styles.section}>
-                        <View style={styles.tickArea}>
-                            <View style={styles.smellTrackLine} />
-                            <View style={styles.smellTicksRow}>
-                                <View style={[styles.tickContainer, { left: '-2%' }]}>
-                                    <View style={styles.tick} />
-                                    <Text style={styles.tickLabel}>Normal</Text>
-                                </View>
-                                <View style={[styles.tickContainer, { left: '2%' }]}>
-                                    <View style={styles.tick} />
-                                    <Text style={styles.tickLabel}>Foul</Text>
-                                </View>
-                                <View style={[styles.tickContainer, { left: '4%' }]}>
-                                    <View style={styles.tick} />
-                                    <Text style={styles.tickLabel}>Very Foul</Text>
-                                </View>
-                            </View>
-                        </View>
-                        <Slider
-                            style={styles.slider}
-                            minimumValue={0}
-                            maximumValue={2}
-                            step={1}
-                            value={smellValue}
-                            onValueChange={setSmellValue}
-                            minimumTrackTintColor="transparent"
-                            maximumTrackTintColor="transparent"
-                            thumbTintColor="#000"
-                        />
-                        <View style={styles.descriptionBox}>
-                            <Text style={styles.optionText}>{mapSmellToLabel(smellValue)}</Text>
-                            <Text style={styles.descriptionText}>{mapSmellToDescription(mapSmellToLabel(smellValue))}</Text>
-                        </View>
-                        <TouchableOpacity style={styles.nextButton} onPress={() => handleNext(mapSmellToLabel(smellValue))}>
-                            <Text style={styles.nextButtonText}>Next</Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
-
-                {currentQuestion.type === "pain" && (
-                    <View style={styles.section}>
-                        <View style={styles.painButtons}>
-                            {["before", "during", "after"].map((step) => (
-                                <TouchableOpacity
-                                    key={step}
-                                    style={[styles.painButton, painStep === step && styles.activePainButton]}
-                                    onPress={() => setPainStep(step)}
-                                >
-                                    <Text style={styles.optionText}>{step.charAt(0).toUpperCase() + step.slice(1)}</Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                        <View style={styles.tickArea}>
-                            <View style={styles.painTrackLine} />
-                            <View style={styles.painTicksRow}>
-                                {[...Array(11).keys()].map((tick) => (
-                                    <View
-                                        key={tick}
-                                        style={[
-                                            styles.tickContainer,
-                                            { left: `${(tick / 10) * 100}%`, position: 'absolute', transform: [{ translateX: -1 }] }
-                                        ]}
-                                    >
-                                        <View style={styles.tick} />
-                                        <Text style={styles.tickLabel}>{tick}</Text>
-                                    </View>
-                                ))}
-                            </View>
-                        </View>
-                        <Slider
-                            style={styles.slider1}
-                            minimumValue={0}
-                            maximumValue={10}
-                            step={1}
-                            value={painValues[painStep]}
-                            onValueChange={(v) => setPainValues({ ...painValues, [painStep]: v })}
-                            minimumTrackTintColor="transparent"
-                            maximumTrackTintColor="transparent"
-                            thumbTintColor="#000"
-                        />
-                        <TouchableOpacity style={styles.nextButton} onPress={() => handleNext()}>
-                            <Text style={styles.nextButtonText}>Next</Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
-
-                {currentQuestion.type === "floatSink" && (
-                    <View style={styles.section}>
-                        <View style={styles.floatToggleRow}>
-                            {["Float", "Sink"].map((type, index) => (
-                                <TouchableOpacity
-                                    key={index}
-                                    style={[
-                                        styles.floatToggleButton,
-                                        floatType === type && styles.activeFloatToggle
-                                    ]}
-                                    onPress={() => {
-                                        setFloatType(type);
-                                        setFloatDetails([]);
-                                    }}
-                                >
-                                    <Text style={[
-                                        styles.floatToggleText,
-                                        floatType === type && styles.activeFloatToggleText
-                                    ]}>
-                                        {type}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-
-                        {floatOptions[floatType].map((detail, idx) => {
-                            const selected = floatDetails.includes(detail);
-                            return (
-                                <TouchableOpacity
-                                    key={idx}
-                                    style={styles.checklistItem}
-                                    onPress={() => {
-                                        if (selected) {
-                                            setFloatDetails(floatDetails.filter(d => d !== detail));
-                                        } else {
-                                            setFloatDetails([...floatDetails, detail]);
-                                        }
-                                    }}
-                                >
-                                    <View style={[styles.dot, selected && styles.filledDot]} />
-                                    <Text style={styles.checklistText}>{detail}</Text>
-                                </TouchableOpacity>
-                            );
-                        })}
-
-                        <TouchableOpacity style={styles.nextButton} onPress={() => handleNext()}>
-                            <Text style={styles.nextButtonText}>Next</Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
-
-                {currentQuestion.type === "textInput" && (
-                    <View style={styles.section}>
-                        <Text style={styles.inputLabel}>Optional Notes:</Text>
-                        <View style={styles.textInputWrapper}>
-                            <TextInput
-                                style={styles.textInput}
-                                placeholder="Describe anything unusual here..."
-                                multiline
-                                numberOfLines={4}
-                                onChangeText={setTextInputValue}
-                                value={textInputValue}
-                            />
-                        </View>
-                        <TouchableOpacity style={styles.nextButton} onPress={() => handleNext(textInputValue)}>
-                            <Text style={styles.nextButtonText}>Next</Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
-
-                {/* Fixed: Proper conditional rendering for image grid (question index 1) */}
-                    {currentIndex === 1 && !currentQuestion.type && (
-                        <View style={styles.imageGrid}>
-                            {[
-                                { src: require('../assets/balls.png'), label: "Type 1", value: "Balls" },
-                                { src: require('../assets/hard.png'), label: "Type 2", value: "Hard" },
-                                { src: require('../assets/lumpy.png'), label: "Type 3", value: "Lumpy" },
-                                { src: require('../assets/normal.png'), label: "Type 4", value: "Normal" },
-                                { src: require('../assets/blobs.png'), label: "Type 5", value: "Blobs" },
-                                { src: require('../assets/fluffy.png'), label: "Type 6", value: "Fluffy" },
-                                { src: require('../assets/watery.png'), label: "Type 7", value: "Watery" },
-                                { src: require('../assets/pencil.png'), label: "Type 8", value: "Pencil Thin" },
-                            ].map((item, index) => (
-                                <TouchableOpacity
-                                    key={index}
-                                    style={styles.imageBox}
-                                    onPress={() => handleNext(item.value)}
-                                >
-                                    <Text style={styles.imageLabel}>{item.label}</Text>
-                                    <Image source={item.src} style={styles.stoolImage} />
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                    )}
-
-                    {/* Fixed: Proper conditional rendering for regular options */}
-                    {currentQuestion.options && currentIndex !== 1 && (
+                    ) : (
                         <>
-                            {currentQuestion.options.map((option, index) => (
-                                <TouchableOpacity
-                                    key={index}
-                                    style={styles.option}
-                                    onPress={() => handleNext(option)}
-                                >
-                                    <Text style={styles.optionText}>{option}</Text>
-                                </TouchableOpacity>
-                            ))}
+                            <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+                                <Text style={styles.backButtonText}>← Back</Text>
+                            </TouchableOpacity>
+
+                            <Text style={currentIndex === 1 ? styles.question2 : styles.question}>
+                                {currentQuestion.question}
+                            </Text>
+
+                            {currentQuestion.type === "slider" && (
+                                <View style={styles.section}>
+                                    <Image source={require('../assets/Rectangle 1.png')} style={styles.gradientBar} />
+                                    <Slider
+                                        style={styles.slider}
+                                        minimumValue={0}
+                                        maximumValue={maxSliderValue}
+                                        step={1}
+                                        value={sliderValue}
+                                        onValueChange={setSliderValue}
+                                        minimumTrackTintColor="transparent"
+                                        maximumTrackTintColor="transparent"
+                                        thumbTintColor="#000"
+                                    />
+                                    <TouchableOpacity style={styles.nextButton} onPress={() => handleNext(selectedColor)}>
+                                        <Text style={styles.nextButtonText}>Next</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+
+                            {currentQuestion.type === "smell" && (
+                                <View style={styles.section}>
+                                    <View style={styles.tickArea}>
+                                        <View style={styles.smellTrackLine} />
+                                        <View style={styles.smellTicksRow}>
+                                            <View style={[styles.tickContainer, { left: '-2%' }]}>
+                                                <View style={styles.tick} />
+                                                <Text style={styles.tickLabel}>Normal</Text>
+                                            </View>
+                                            <View style={[styles.tickContainer, { left: '2%' }]}>
+                                                <View style={styles.tick} />
+                                                <Text style={styles.tickLabel}>Foul</Text>
+                                            </View>
+                                            <View style={[styles.tickContainer, { left: '4%' }]}>
+                                                <View style={styles.tick} />
+                                                <Text style={styles.tickLabel}>Very Foul</Text>
+                                            </View>
+                                        </View>
+                                    </View>
+                                    <Slider
+                                        style={styles.slider}
+                                        minimumValue={0}
+                                        maximumValue={2}
+                                        step={1}
+                                        value={smellValue}
+                                        onValueChange={setSmellValue}
+                                        minimumTrackTintColor="transparent"
+                                        maximumTrackTintColor="transparent"
+                                        thumbTintColor="#000"
+                                    />
+                                    <View style={styles.descriptionBox}>
+                                        <Text style={styles.optionText}>{mapSmellToLabel(smellValue)}</Text>
+                                        <Text style={styles.descriptionText}>{mapSmellToDescription(mapSmellToLabel(smellValue))}</Text>
+                                    </View>
+                                    <TouchableOpacity style={styles.nextButton} onPress={() => handleNext(mapSmellToLabel(smellValue))}>
+                                        <Text style={styles.nextButtonText}>Next</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+
+                            {currentQuestion.type === "pain" && (
+                                <View style={styles.section}>
+                                    <View style={styles.painButtons}>
+                                        {["before", "during", "after"].map((step) => (
+                                            <TouchableOpacity
+                                                key={step}
+                                                style={[styles.painButton, painStep === step && styles.activePainButton]}
+                                                onPress={() => setPainStep(step)}
+                                            >
+                                                <Text style={styles.optionText}>{step.charAt(0).toUpperCase() + step.slice(1)}</Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
+                                    <View style={styles.tickArea}>
+                                        <View style={styles.painTrackLine} />
+                                        <View style={styles.painTicksRow}>
+                                            {[...Array(11).keys()].map((tick) => (
+                                                <View
+                                                    key={tick}
+                                                    style={[
+                                                        styles.tickContainer,
+                                                        { left: `${(tick / 10) * 100}%`, position: 'absolute', transform: [{ translateX: -1 }] }
+                                                    ]}
+                                                >
+                                                    <View style={styles.tick} />
+                                                    <Text style={styles.tickLabel}>{tick}</Text>
+                                                </View>
+                                            ))}
+                                        </View>
+                                    </View>
+                                    <Slider
+                                        style={styles.slider1}
+                                        minimumValue={0}
+                                        maximumValue={10}
+                                        step={1}
+                                        value={painValues[painStep]}
+                                        onValueChange={(v) => setPainValues({ ...painValues, [painStep]: v })}
+                                        minimumTrackTintColor="transparent"
+                                        maximumTrackTintColor="transparent"
+                                        thumbTintColor="#000"
+                                    />
+                                    <TouchableOpacity style={styles.nextButton} onPress={() => handleNext()}>
+                                        <Text style={styles.nextButtonText}>Next</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+
+                            {currentQuestion.type === "floatSink" && (
+                                <View style={styles.section}>
+                                    <View style={styles.floatToggleRow}>
+                                        {["Float", "Sink"].map((type, index) => (
+                                            <TouchableOpacity
+                                                key={index}
+                                                style={[
+                                                    styles.floatToggleButton,
+                                                    floatType === type && styles.activeFloatToggle
+                                                ]}
+                                                onPress={() => {
+                                                    setFloatType(type);
+                                                    setFloatDetails([]);
+                                                }}
+                                            >
+                                                <Text style={[
+                                                    styles.floatToggleText,
+                                                    floatType === type && styles.activeFloatToggleText
+                                                ]}>
+                                                    {type}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
+
+                                    <View style={styles.optionsContainer}>
+                                        {floatOptions[floatType].map((detail, idx) => {
+                                            const selected = floatDetails.includes(detail);
+                                            return (
+                                                <TouchableOpacity
+                                                    key={idx}
+                                                    style={styles.checklistItem}
+                                                    onPress={() => {
+                                                        if (selected) {
+                                                            setFloatDetails(floatDetails.filter(d => d !== detail));
+                                                        } else {
+                                                            setFloatDetails([...floatDetails, detail]);
+                                                        }
+                                                    }}
+                                                >
+                                                    <View style={[styles.dot, selected && styles.filledDot]} />
+                                                    <Text style={styles.checklistText}>{detail}</Text>
+                                                </TouchableOpacity>
+                                            );
+                                        })}
+                                    </View>
+
+                                    <TouchableOpacity style={styles.nextButton} onPress={() => handleNext()}>
+                                        <Text style={styles.nextButtonText}>Next</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+
+                            {currentQuestion.type === "textInput" && (
+                                <View style={styles.section}>
+                                    <Text style={styles.inputLabel}>Optional Notes:</Text>
+                                    <View style={styles.textInputWrapper}>
+                                        <TextInput
+                                            style={styles.textInput}
+                                            placeholder="Describe anything unusual here..."
+                                            multiline
+                                            numberOfLines={4}
+                                            onChangeText={setTextInputValue}
+                                            value={textInputValue}
+                                            returnKeyType="done"
+                                            onSubmitEditing={Keyboard.dismiss}
+                                        />
+                                    </View>
+                                    <TouchableOpacity style={styles.nextButton} onPress={() => handleNext(textInputValue)}>
+                                        <Text style={styles.nextButtonText}>Next</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+
+                            {currentIndex === 1 && !currentQuestion.type && (
+                                <View style={styles.imageGrid}>
+                                    {[
+                                        { src: require('../assets/balls.png'), label: "Type 1", value: "Balls" },
+                                        { src: require('../assets/hard.png'), label: "Type 2", value: "Hard" },
+                                        { src: require('../assets/lumpy.png'), label: "Type 3", value: "Lumpy" },
+                                        { src: require('../assets/normal.png'), label: "Type 4", value: "Normal" },
+                                        { src: require('../assets/blobs.png'), label: "Type 5", value: "Blobs" },
+                                        { src: require('../assets/fluffy.png'), label: "Type 6", value: "Fluffy" },
+                                        { src: require('../assets/watery.png'), label: "Type 7", value: "Watery" },
+                                        { src: require('../assets/pencil.png'), label: "Type 8", value: "Pencil Thin" },
+                                    ].map((item, index) => (
+                                        <TouchableOpacity
+                                            key={index}
+                                            style={styles.imageBox}
+                                            onPress={() => {
+                                                console.log(`Selected: ${item.value}`);
+                                                handleNext(item.value);
+                                            }}
+                                            activeOpacity={0.7}
+                                        >
+                                            <Text style={styles.imageLabel}>{item.label}</Text>
+                                            <Image source={item.src} style={styles.stoolImage} />
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            )}
+
+                            {currentQuestion.options && currentIndex !== 1 && (
+                                <>
+                                    {currentQuestion.options.map((option, index) => (
+                                        <TouchableOpacity
+                                            key={index}
+                                            style={styles.option}
+                                            onPress={() => handleNext(option)}
+                                        >
+                                            <Text style={styles.optionText}>{option}</Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </>
+                            )}
+
                         </>
                     )}
+                </View>
+            </TouchableWithoutFeedback>
+            <View style={styles.screenIndicator}>
+                <Text style={styles.screenIndicatorText}>
+                    {currentIndex + 1} of {questions.length}
+                </Text>
+            </View>
+        </KeyboardAvoidingView>
 
-                    {/* Screen Indicator - Fixed position at bottom */}
-                    <View style={styles.screenIndicator}>
-                        <Text style={styles.screenIndicatorText}>
-                            {currentIndex + 1} of {questions.length}
-                        </Text>
-                    </View>
-                </>
-            )}
-        </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
-        paddingTop: 150,
+        paddingTop: 80,
         paddingHorizontal: 20,
         backgroundColor: '#fff',
         flex: 1,
@@ -408,8 +412,8 @@ const styles = StyleSheet.create({
     },
     backButton: {
         position: 'absolute',
-        top: 60,
-        left: 20,
+        top: 10,
+        left: 10,
         paddingVertical: 8,
         paddingHorizontal: 12,
         backgroundColor: '#f0f0f0',
@@ -428,6 +432,13 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         minHeight: 60,
         top: 140
+    },
+    question2: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        marginBottom: 100,
+        textAlign: 'center',
+        minHeight: 60,
     },
     gradientBar: {
         width: '100%',
@@ -485,7 +496,8 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         marginTop: 10,
         width: '100%',
-        minHeight: 80,
+        minHeight: 100,
+        maxHeight: 120,
     },
     descriptionText: {
         fontSize: 14,
@@ -598,12 +610,16 @@ const styles = StyleSheet.create({
         color: '#000',
         fontWeight: 'bold'
     },
+    optionsContainer: {
+        width: '100%',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
     checklistItem: {
         flexDirection: 'row',
         alignItems: 'flex-start',
         marginVertical: 8,
         width: '70%',
-        left: '20%'
     },
     dot: {
         width: 16,
@@ -612,7 +628,7 @@ const styles = StyleSheet.create({
         borderWidth: 2,
         borderColor: '#333',
         marginRight: 12,
-        marginTop: 4, // minor tweak to vertically align with multi-line text
+        marginTop: 4,
     },
     filledDot: {
         backgroundColor: '#333',
@@ -634,6 +650,9 @@ const styles = StyleSheet.create({
         width: '45%',
         marginVertical: 10,
         alignItems: 'center',
+        padding: 4,
+        borderRadius: 8,
+        backgroundColor: 'transparent',
     },
     imageLabel: {
         fontSize: 16,
@@ -642,8 +661,8 @@ const styles = StyleSheet.create({
         color: '#333',
     },
     stoolImage: {
-        width: 100,
-        height: 100,
+        width: 90,
+        height: 90,
         resizeMode: 'contain',
     },
     textInputWrapper: {
@@ -658,13 +677,6 @@ const styles = StyleSheet.create({
         textAlignVertical: 'top',
         fontSize: 16,
         color: '#333',
-    },
-    question2:{
-        fontSize: 22,
-        fontWeight: 'bold',
-        marginBottom: 100,
-        textAlign: 'center',
-        minHeight: 60,
     },
     startScreen: {
         flex: 1,
@@ -693,11 +705,11 @@ const styles = StyleSheet.create({
     },
     screenIndicator: {
         position: 'absolute',
-        bottom: 30,
+        bottom: 40,
         left: 0,
         right: 0,
         alignItems: 'center',
-        zIndex: 5,
+        zIndex: 1,
     },
     screenIndicatorText: {
         fontSize: 16,
@@ -711,19 +723,4 @@ const styles = StyleSheet.create({
         borderColor: '#e0e0e0',
         marginBottom: 5,
     },
-    skipButton: {
-        backgroundColor: '#f0f0f0',
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-        borderRadius: 10,
-        marginTop: 10,
-        borderWidth: 1,
-        borderColor: '#ddd',
-    },
-    skipButtonText: {
-        color: '#666',
-        fontSize: 16,
-        textAlign: 'center',
-    }
 });
-

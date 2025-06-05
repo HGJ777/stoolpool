@@ -29,21 +29,22 @@ const getScore = (answers) => {
     score += weights.color[color] || 0;
     score += weights.consistency[consistency] || 0;
     score += weights.smell[smell] || 0;
-    // REMOVED: Don't score the notes - they're just text!
 
     // Pain scores
-    if (typeof pain === 'object') {
-        score += pain.before + pain.during + pain.after;
+    if (typeof pain === 'object' && pain !== null) {
+        score += (pain.before || 0) + (pain.during || 0) + (pain.after || 0);
     }
 
     // Float + floatDetails
     if (typeof floatAnswer === 'string' && floatAnswer.includes(':')) {
         const [type, detailStr] = floatAnswer.split(':');
         score += weights.float[type.trim()] || 0;
-        const details = detailStr.split(',').map(d => d.trim());
-        details.forEach(detail => {
-            score += weights.floatDetails[detail] || 0;
-        });
+        if (detailStr && detailStr.trim()) {
+            const details = detailStr.split(',').map(d => d.trim());
+            details.forEach(detail => {
+                score += weights.floatDetails[detail] || 0;
+            });
+        }
     }
 
     return score;
@@ -54,112 +55,121 @@ const getResultDetails = (score) => {
     if (score >= 10) return { color: 'red', message: '⚠️ Go for a medical checkup.' };
     if (score >= 5) return { color: 'yellow', message: '🟡 Watch your diet.' };
     return { color: 'green', message: '✅ You are in the clear!' };
-    };
+};
 
-    export default function ResultScreen({ route, navigation }) {
-        const { answers } = route.params;
-        const score = getScore(answers);
-        const { color, message } = getResultDetails(score);
-
-        useEffect(() => {
-            const saveResult = async () => {
-                try {
-                    const existing = await AsyncStorage.getItem('stool_results');
-                    const parsed = existing ? JSON.parse(existing) : [];
-                    const date = new Date().toLocaleString();
-
-                    // 🔥 IMPORTANT CHANGE: Save the original answers array
-                    parsed.push({
-                        date,
-                        result: message,
-                        color,
-                        score,
-                        answers: answers // ← This saves all the user's quiz choices!
-                    });
-
-                    console.log('Saved answers:', answers); // Debug log to verify data
-
-                    await AsyncStorage.setItem('stool_results', JSON.stringify(parsed));
-                } catch (err) {
-                    console.error('❌ Error saving result:', err);
-                }
-            };
-            saveResult();
-        }, [answers, message, color, score]); // Added dependencies
-
-        return (
-            <View style={styles.container}>
-                <Text style={styles.title}>Your StoolPool Result</Text>
-
-                <View style={[styles.resultBox, { borderColor: colorMap[color] }]}>
-                    <Text style={styles.score}>Score: {score}</Text>
-                    <Text style={[styles.resultMessage, { color: colorMap[color] }]}>{message}</Text>
-                </View>
-
-                <View style={styles.buttons}>
-                    <TouchableOpacity style={styles.btn} onPress={() => navigation.navigate('Tabs', { screen: 'Quiz' })}>
-                        <Text style={styles.btnText}>🔁 Retake Quiz</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.btn} onPress={() => navigation.navigate('Tabs', { screen: 'History' })}>
-                        <Text style={styles.btnText}>📚 View History</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
-        );
+// FIXED: Consistent date saving format
+const formatDateForSaving = () => {
+    try {
+        const now = new Date();
+        return now.toISOString(); // Always save as ISO string
+    } catch (error) {
+        console.error('Date formatting error:', error);
+        return new Date().toISOString();
     }
+};
 
-    const colorMap = {
-        black: '#000',
-        red: '#e53935',
-        yellow: '#fbc02d',
-        green: '#43a047',
-    };
+export default function ResultScreen({ route, navigation }) {
+    const { answers } = route.params;
+    const score = getScore(answers);
+    const { color, message } = getResultDetails(score);
 
-    const styles = StyleSheet.create({
-        container: {
-            flex: 1,
-            backgroundColor: '#fff',
-            padding: 30,
-            justifyContent: 'center',
-            alignItems: 'center',
-        },
-        title: {
-            fontSize: 26,
-            fontWeight: 'bold',
-            marginBottom: 20,
-        },
-        resultBox: {
-            borderWidth: 3,
-            padding: 25,
-            borderRadius: 12,
-            marginBottom: 30,
-            width: '100%',
-            alignItems: 'center',
-        },
-        score: {
-            fontSize: 20,
-            marginBottom: 10,
-            fontWeight: '600',
-        },
-        resultMessage: {
-            fontSize: 18,
-            fontWeight: 'bold',
-            textAlign: 'center',
-        },
-        buttons: {
-            width: '100%',
-            gap: 15,
-        },
-        btn: {
-            backgroundColor: '#2196f3',
-            padding: 15,
-            borderRadius: 10,
-            alignItems: 'center',
-        },
-        btnText: {
-            color: '#fff',
-            fontWeight: '600',
-            fontSize: 16,
-        },
-    });
+    useEffect(() => {
+        const saveResult = async () => {
+            try {
+                const existing = await AsyncStorage.getItem('stool_results');
+                const parsed = existing ? JSON.parse(existing) : [];
+                const date = formatDateForSaving(); // Use consistent ISO format
+
+                parsed.push({
+                    date,
+                    result: message,
+                    color,
+                    score,
+                    answers: answers
+                });
+
+                console.log('Saved result with date:', date);
+                await AsyncStorage.setItem('stool_results', JSON.stringify(parsed));
+            } catch (err) {
+                console.error('❌ Error saving result:', err);
+            }
+        };
+        saveResult();
+    }, [answers, message, color, score]);
+
+    return (
+        <View style={styles.container}>
+            <Text style={styles.title}>Your StoolPool Result</Text>
+
+            <View style={[styles.resultBox, { borderColor: colorMap[color] }]}>
+                <Text style={styles.score}>Score: {score}</Text>
+                <Text style={[styles.resultMessage, { color: colorMap[color] }]}>{message}</Text>
+            </View>
+
+            <View style={styles.buttons}>
+                <TouchableOpacity style={styles.btn} onPress={() => navigation.navigate('Tabs', { screen: 'Quiz' })}>
+                    <Text style={styles.btnText}>🔁 Retake Quiz</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.btn} onPress={() => navigation.navigate('Tabs', { screen: 'History' })}>
+                    <Text style={styles.btnText}>📚 View History</Text>
+                </TouchableOpacity>
+            </View>
+        </View>
+    );
+}
+
+const colorMap = {
+    black: '#000',
+    red: '#e53935',
+    yellow: '#fbc02d',
+    green: '#43a047',
+};
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#fff',
+        padding: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    title: {
+        fontSize: 26,
+        fontWeight: 'bold',
+        marginBottom: 20,
+    },
+    resultBox: {
+        borderWidth: 3,
+        padding: 25,
+        borderRadius: 12,
+        marginBottom: 30,
+        width: '100%',
+        alignItems: 'center',
+    },
+    score: {
+        fontSize: 20,
+        marginBottom: 10,
+        fontWeight: '600',
+    },
+    resultMessage: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        textAlign: 'center',
+    },
+    buttons: {
+        width: '100%',
+        gap: 15,
+    },
+    btn: {
+        backgroundColor: '#2196f3',
+        padding: 15,
+        borderRadius: 10,
+        alignItems: 'center',
+    },
+    btnText: {
+        color: '#fff',
+        fontWeight: '600',
+        fontSize: 16,
+    },
+});

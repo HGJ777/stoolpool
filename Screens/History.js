@@ -2,39 +2,90 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// FIXED: Universal date formatting function
+const formatDate = (dateString) => {
+    try {
+        if (!dateString) {
+            console.warn('No date provided to formatDate');
+            return 'No date';
+        }
+
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) {
+            console.warn('Invalid date in HistoryScreen:', dateString);
+            return 'Invalid Date';
+        }
+
+        return date.toLocaleDateString('en-US', {
+            weekday: 'long',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+    } catch (error) {
+        console.error('Date formatting error in HistoryScreen:', error, 'for date:', dateString);
+        return 'Date Error';
+    }
+};
+
+// Debug function to check stored dates
+const debugStoredDates = async () => {
+    try {
+        const data = await AsyncStorage.getItem('stool_results');
+        if (data) {
+            const results = JSON.parse(data);
+            console.log('=== STORED DATES DEBUG ===');
+            results.forEach((entry, index) => {
+                console.log(`Entry ${index}:`, {
+                    originalDate: entry.date,
+                    dateType: typeof entry.date,
+                    parsedDate: new Date(entry.date),
+                    isValidDate: !isNaN(new Date(entry.date).getTime()),
+                    formatted: formatDate(entry.date)
+                });
+            });
+            console.log('=== END DEBUG ===');
+        }
+    } catch (error) {
+        console.error('Debug error:', error);
+    }
+};
+
 export default function HistoryScreen({ navigation }) {
     const [history, setHistory] = useState([]);
     const [selectedEntry, setSelectedEntry] = useState(null);
 
     useEffect(() => {
         const loadResults = async () => {
-            const data = await AsyncStorage.getItem("stool_results");
-            if (data) {
-                const parsed = JSON.parse(data);
-                setHistory(parsed.reverse()); // latest first
+            try {
+                const data = await AsyncStorage.getItem("stool_results");
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    setHistory(parsed.reverse());
+                }
+
+                // Uncomment to debug date issues:
+                // debugStoredDates();
+            } catch (error) {
+                console.error('Error loading results:', error);
             }
         };
         loadResults();
     }, []);
 
     const deleteEntry = async (indexToRemove) => {
-        const updated = [...history];
-        updated.splice(indexToRemove, 1);
-        setHistory(updated);
+        try {
+            const updated = [...history];
+            updated.splice(indexToRemove, 1);
+            setHistory(updated);
 
-        const reversedBack = [...updated].reverse();
-        await AsyncStorage.setItem("stool_results", JSON.stringify(reversedBack));
-    };
-
-    const formatPainData = (painObj) => {
-        if (!painObj || typeof painObj !== 'object') return 'No pain data';
-        return `Before: ${painObj.before}/10, During: ${painObj.during}/10, After: ${painObj.after}/10`;
-    };
-
-    const formatFloatData = (floatStr) => {
-        if (!floatStr || typeof floatStr !== 'string') return 'No float data';
-        const [type, details] = floatStr.split(':');
-        return `${type.trim()}${details ? ` - ${details.trim()}` : ''}`;
+            const reversedBack = [...updated].reverse();
+            await AsyncStorage.setItem("stool_results", JSON.stringify(reversedBack));
+        } catch (error) {
+            console.error('Error deleting entry:', error);
+        }
     };
 
     const getQuestionLabels = () => [
@@ -43,10 +94,9 @@ export default function HistoryScreen({ navigation }) {
         '👃 Smell',
         '😣 Pain Level',
         '🌊 Float/Sink',
-        '📝 Appearance Notes'
     ];
 
-    // 👉 Detail View
+    // Detail View
     if (selectedEntry !== null) {
         const questionLabels = getQuestionLabels();
 
@@ -61,18 +111,18 @@ export default function HistoryScreen({ navigation }) {
 
                 <Text style={styles.detailTitle}>📄 Detailed Report</Text>
 
-                {/* Header Info */}
+                {/* Header Info - FIXED date display */}
                 <View style={styles.headerCard}>
                     <View style={styles.headerRow}>
                         <View style={[styles.statusDot, { backgroundColor: selectedEntry.color }]} />
                         <View style={styles.headerText}>
-                            <Text style={styles.headerDate}>{selectedEntry.date}</Text>
+                            <Text style={styles.headerDate}>{formatDate(selectedEntry.date)}</Text>
                             <Text style={[styles.headerResult, { color: selectedEntry.color }]}>
                                 {selectedEntry.result}
                             </Text>
                         </View>
                         <View style={styles.scoreContainer}>
-                            <Text style={styles.scoreNumber}>{selectedEntry.score || 0}</Text>
+                            <Text style={styles.scoreNumber}>{selectedEntry.score !== undefined ? selectedEntry.score : 0}</Text>
                             <Text style={styles.scoreLabel}>Score</Text>
                         </View>
                     </View>
@@ -116,36 +166,56 @@ export default function HistoryScreen({ navigation }) {
                                 );
                             }
 
-                            // Handle Float/Sink (index 4) - Show properly formatted
+                            // Handle Float/Sink (index 4) - Show properly formatted with separate boxes
                             if (index === 4 && typeof answer === 'string') {
-                                let displayValue = '';
                                 if (answer.includes(':')) {
                                     const [type, details] = answer.split(':');
+                                    const cleanType = type.trim();
                                     const cleanDetails = details.trim();
-                                    if (cleanDetails && cleanDetails !== '' && cleanDetails !== ' ') {
-                                        displayValue = `${type.trim()}: ${cleanDetails}`;
-                                    } else {
-                                        displayValue = type.trim();
-                                    }
-                                } else {
-                                    displayValue = answer;
-                                }
 
-                                return (
-                                    <View key={index} style={styles.symptomRow}>
-                                        <Text style={styles.symptomLabel}>{questionLabels[index]}</Text>
-                                        <Text style={styles.symptomValue}>{displayValue}</Text>
-                                    </View>
-                                );
+                                    return (
+                                        <View key={index} style={styles.floatSinkSection}>
+                                            <Text style={styles.symptomLabel}>{questionLabels[index]}</Text>
+
+                                            {/* Main type box */}
+                                            <View style={styles.floatTypeBox}>
+                                                <Text style={styles.floatTypeText}>{cleanType}</Text>
+                                            </View>
+
+                                            {/* Details box (only if details exist) */}
+                                            {cleanDetails && cleanDetails !== '' && (
+                                                <View style={styles.floatDetailsBox}>
+                                                    <Text style={styles.floatDetailsLabel}>Details:</Text>
+                                                    <Text style={styles.floatDetailsText}>{cleanDetails}</Text>
+                                                </View>
+                                            )}
+
+                                            {/* Description box */}
+                                            <View style={styles.floatDescriptionBox}>
+                                                <Text style={styles.floatDescriptionText}>
+                                                    {cleanType === 'Float'
+                                                        ? 'Floating stool may indicate fat malabsorption or dietary factors'
+                                                        : 'Sinking stool is typically normal and indicates proper density'
+                                                    }
+                                                </Text>
+                                            </View>
+                                        </View>
+                                    );
+                                } else {
+                                    return (
+                                        <View key={index} style={styles.symptomRow}>
+                                            <Text style={styles.symptomLabel}>{questionLabels[index]}</Text>
+                                            <Text style={styles.symptomValue}>{answer}</Text>
+                                        </View>
+                                    );
+                                }
                             }
 
                             // Handle all other answers (Color, Shape, Smell, Notes)
                             let displayValue = '';
                             if (typeof answer === 'object') {
-                                // If it's an unexpected object, show debug info
                                 displayValue = `Debug: ${JSON.stringify(answer)}`;
                             } else {
-                                // Regular string data
                                 displayValue = answer.toString();
                             }
 
@@ -210,7 +280,7 @@ export default function HistoryScreen({ navigation }) {
         );
     }
 
-    // 🗂 Default List View
+    // Default List View
     return (
         <ScrollView contentContainerStyle={styles.container}>
             <TouchableOpacity
@@ -242,18 +312,14 @@ export default function HistoryScreen({ navigation }) {
                                     <View style={[styles.colorDot, { backgroundColor: entry.color }]} />
                                     <View style={styles.cardInfo}>
                                         <Text style={styles.cardDate}>
-                                            {new Date(entry.date).toLocaleDateString('en-US', {
-                                                weekday: 'short',
-                                                month: 'short',
-                                                day: 'numeric',
-                                                hour: '2-digit',
-                                                minute: '2-digit'
-                                            })}
+                                            {formatDate(entry.date)}
                                         </Text>
                                         <Text style={styles.cardResult} numberOfLines={1}>
                                             {entry.result}
                                         </Text>
-                                        <Text style={styles.cardScore}>Score: {entry.score || 'N/A'}</Text>
+                                        <Text style={styles.cardScore}>
+                                            Score: {entry.score !== undefined ? entry.score : 0}
+                                        </Text>
                                     </View>
                                     <View style={styles.cardActions}>
                                         <Text style={styles.viewMore}>View Details →</Text>
@@ -264,7 +330,7 @@ export default function HistoryScreen({ navigation }) {
                                             }}
                                             style={styles.deleteButton}
                                         >
-                                            <Text style={styles.deleteText}>🗑️</Text>
+                                            <Text style={styles.deleteText}>✕</Text>
                                         </TouchableOpacity>
                                     </View>
                                 </View>
@@ -384,7 +450,9 @@ const styles = StyleSheet.create({
         padding: 4,
     },
     deleteText: {
-        fontSize: 16,
+        fontSize: 18,
+        color: '#f44336',
+        fontWeight: 'bold',
     },
     // Detail View Styles
     headerCard: {
@@ -541,6 +609,53 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: 'bold',
         color: '#333',
+    },
+    // Float/Sink detailed view styles
+    floatSinkSection: {
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+    },
+    floatTypeBox: {
+        backgroundColor: '#e3f2fd',
+        padding: 12,
+        borderRadius: 8,
+        marginTop: 8,
+        marginBottom: 8,
+    },
+    floatTypeText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#1976d2',
+        textAlign: 'center',
+    },
+    floatDetailsBox: {
+        backgroundColor: '#f5f5f5',
+        padding: 10,
+        borderRadius: 6,
+        marginBottom: 8,
+    },
+    floatDetailsLabel: {
+        fontSize: 12,
+        color: '#666',
+        fontWeight: '500',
+        marginBottom: 4,
+    },
+    floatDetailsText: {
+        fontSize: 14,
+        color: '#333',
+    },
+    floatDescriptionBox: {
+        backgroundColor: '#fff3e0',
+        padding: 10,
+        borderRadius: 6,
+        borderLeftWidth: 3,
+        borderLeftColor: '#ff9800',
+    },
+    floatDescriptionText: {
+        fontSize: 12,
+        color: '#f57c00',
+        fontStyle: 'italic',
     },
     debugText: {
         fontSize: 12,

@@ -1,5 +1,5 @@
 git add .
-git commit -m "before testing sliders"
+git commit -m "Basic UI completed"
 git push
 
 git checkout -b sliders-ui

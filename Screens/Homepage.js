@@ -2,6 +2,63 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// FIXED: Universal date formatting function
+const formatDate = (dateString) => {
+    try {
+        if (!dateString) {
+            console.warn('No date provided to formatDate');
+            return 'No date';
+        }
+
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) {
+            console.warn('Invalid date in HomeScreen:', dateString);
+            return 'Invalid Date';
+        }
+
+        return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+    } catch (error) {
+        console.error('Date formatting error in HomeScreen:', error, 'for date:', dateString);
+        return 'Date Error';
+    }
+};
+
+// FIXED: Migration function to fix existing bad dates
+const fixExistingDates = async () => {
+    try {
+        const data = await AsyncStorage.getItem('stool_results');
+        if (data) {
+            const results = JSON.parse(data);
+            let hasChanges = false;
+
+            const fixedResults = results.map(entry => {
+                if (!entry.date || isNaN(new Date(entry.date).getTime())) {
+                    console.log('Fixing bad date:', entry.date);
+                    hasChanges = true;
+                    return {
+                        ...entry,
+                        date: new Date().toISOString() // Replace with current time
+                    };
+                }
+                return entry;
+            });
+
+            if (hasChanges) {
+                await AsyncStorage.setItem('stool_results', JSON.stringify(fixedResults));
+                console.log('Fixed existing bad dates in storage');
+            }
+        }
+    } catch (error) {
+        console.error('Error fixing dates:', error);
+    }
+};
+
 export default function HomeScreen({ navigation }) {
     const [stats, setStats] = useState({
         totalLogs: 0,
@@ -14,12 +71,19 @@ export default function HomeScreen({ navigation }) {
         avgPainRating: 0,
         mostCommonFloat: null,
         avgFrequency: 0,
-        weeklyAverage: 0
+        weeklyAverage: 0,
+        dailyAverage: 0
     });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        loadStats();
+        const initializeData = async () => {
+            // Fix any existing bad dates first
+            await fixExistingDates();
+            // Then load stats
+            await loadStats();
+        };
+        initializeData();
     }, []);
 
     const loadStats = async () => {
@@ -57,11 +121,14 @@ export default function HomeScreen({ navigation }) {
             resultCounts[a] > resultCounts[b] ? a : b
         );
 
-        // Bowel movement trend (last 7 entries)
-        const recentEntries = results.slice(-7).map(entry => ({
-            date: new Date(entry.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-            score: entry.score
-        }));
+        // Bowel movement trend (last 7 entries) - FIXED date handling
+        const recentEntries = results.slice(-7).map(entry => {
+            const date = new Date(entry.date);
+            return {
+                date: isNaN(date.getTime()) ? 'Invalid' : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                score: entry.score || 0
+            };
+        });
 
         // Analyze answers for patterns
         const colors = {};
@@ -90,7 +157,7 @@ export default function HomeScreen({ navigation }) {
                 // Pain (index 3) - object with before, during, after
                 if (entry.answers[3] && typeof entry.answers[3] === 'object') {
                     const pain = entry.answers[3];
-                    const avgPain = (pain.before + pain.during + pain.after) / 3;
+                    const avgPain = ((pain.before || 0) + (pain.during || 0) + (pain.after || 0)) / 3;
                     painRatings.push(avgPain);
                 }
 
@@ -118,11 +185,17 @@ export default function HomeScreen({ navigation }) {
         const mostCommonFloat = Object.keys(floatTypes).length > 0 ?
             Object.keys(floatTypes).reduce((a, b) => floatTypes[a] > floatTypes[b] ? a : b) : 'N/A';
 
-        // Calculate weekly average
+        // Calculate weekly average - FIXED date handling
         const now = new Date();
         const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        const recentResults = results.filter(entry => new Date(entry.date) >= oneWeekAgo);
+        const recentResults = results.filter(entry => {
+            const entryDate = new Date(entry.date);
+            return !isNaN(entryDate.getTime()) && entryDate >= oneWeekAgo;
+        });
         const weeklyAverage = recentResults.length;
+
+        // Calculate daily average
+        const dailyAverage = weeklyAverage / 7;
 
         setStats({
             totalLogs,
@@ -134,7 +207,8 @@ export default function HomeScreen({ navigation }) {
             mostCommonSmell,
             avgPainRating,
             mostCommonFloat,
-            weeklyAverage
+            weeklyAverage,
+            dailyAverage
         });
     };
 
@@ -143,15 +217,6 @@ export default function HomeScreen({ navigation }) {
         if (result?.includes('checkup')) return '#e53935';
         if (result?.includes('diet')) return '#fbc02d';
         return '#43a047';
-    };
-
-    const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
     };
 
     if (loading) {
@@ -188,7 +253,7 @@ export default function HomeScreen({ navigation }) {
                         </View>
                     </View>
 
-                    {/* Last Entry */}
+                    {/* Last Entry - FIXED date display */}
                     {stats.lastEntry && (
                         <View style={styles.section}>
                             <Text style={styles.sectionTitle}>📅 Last Entry</Text>
@@ -197,7 +262,7 @@ export default function HomeScreen({ navigation }) {
                                 <Text style={[styles.cardResult, { color: getResultColor(stats.lastEntry.result) }]}>
                                     {stats.lastEntry.result}
                                 </Text>
-                                <Text style={styles.cardScore}>Score: {stats.lastEntry.score}</Text>
+                                <Text style={styles.cardScore}>Score: {stats.lastEntry.score !== undefined ? stats.lastEntry.score : 0}</Text>
                             </View>
                         </View>
                     )}
@@ -228,7 +293,7 @@ export default function HomeScreen({ navigation }) {
                         </View>
                     )}
 
-                    {/* Most Common Patterns */}
+                    {/* Most Common Patterns - FIXED to show 6 items */}
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>🎯 Most Common Patterns</Text>
 
@@ -268,6 +333,12 @@ export default function HomeScreen({ navigation }) {
                                 <Text style={styles.patternEmoji}>🌊</Text>
                                 <Text style={styles.patternLabel}>Buoyancy</Text>
                                 <Text style={styles.patternValue}>{stats.mostCommonFloat}</Text>
+                            </View>
+
+                            <View style={styles.patternItem}>
+                                <Text style={styles.patternEmoji}>📊</Text>
+                                <Text style={styles.patternLabel}>Daily Avg</Text>
+                                <Text style={styles.patternValue}>{stats.dailyAverage.toFixed(1)}</Text>
                             </View>
                         </View>
                     </View>
@@ -425,6 +496,9 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
     patternGrid: {
         flexDirection: 'row',
@@ -433,8 +507,8 @@ const styles = StyleSheet.create({
     },
     patternItem: {
         backgroundColor: '#fff',
-        width: '48%',
-        padding: 15,
+        width: '31%',
+        padding: 12,
         borderRadius: 12,
         alignItems: 'center',
         shadowColor: '#000',
@@ -444,8 +518,8 @@ const styles = StyleSheet.create({
         elevation: 3,
     },
     patternEmoji: {
-        fontSize: 24,
-        marginBottom: 8,
+        fontSize: 20,
+        marginBottom: 6,
     },
     patternLabel: {
         fontSize: 12,
@@ -454,7 +528,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     patternValue: {
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: 'bold',
         color: '#333',
         textAlign: 'center',
